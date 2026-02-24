@@ -1,18 +1,97 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="fa">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>my-first-website</title>
-  <LINK href="styles.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>محاسبه زوایای زمین چهارضلعی</title>
+  <link href="styles.css" rel="stylesheet" type="text/css" />
 </head>
-
 <body>
+  <main class="container">
+    <h1>محاسبه‌گر زوایای زمین چهارضلعی</h1>
+    <p class="description">
+      با داشتن چهار ضلع و مساحت، زاویه‌های تک‌به‌تک قابل تعیین قطعی نیستند؛
+      اما می‌توان <strong>جمع دو زاویهٔ مقابل</strong> را محاسبه کرد.
+    </p>
 
-<img src="https://octodex.github.com/images/daftpunktocat-thomas.gif" id="octocat" alt="octocat-gif" />
+    <form id="land-form" class="card">
+      <label>ضلع a (متر)
+        <input type="number" id="a" min="0" step="any" required />
+      </label>
+      <label>ضلع b (متر)
+        <input type="number" id="b" min="0" step="any" required />
+      </label>
+      <label>ضلع c (متر)
+        <input type="number" id="c" min="0" step="any" required />
+      </label>
+      <label>ضلع d (متر)
+        <input type="number" id="d" min="0" step="any" required />
+      </label>
+      <label>مساحت (متر مربع)
+        <input type="number" id="area" min="0" step="any" required />
+      </label>
+      <button type="submit">محاسبه</button>
+    </form>
 
-<!-- Change this code here by copy and pasting your template on line 15 -->
-<p>Welcome to your first GitHub Pages website!</p>
+    <section id="result" class="card result" aria-live="polite"></section>
+  </main>
 
+  <script>
+    const form = document.getElementById('land-form');
+    const result = document.getElementById('result');
+
+    const toNumber = (id) => Number(document.getElementById(id).value);
+    const deg = (rad) => (rad * 180) / Math.PI;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const a = toNumber('a');
+      const b = toNumber('b');
+      const c = toNumber('c');
+      const d = toNumber('d');
+      const area = toNumber('area');
+
+      if ([a, b, c, d, area].some((n) => !Number.isFinite(n) || n <= 0)) {
+        result.innerHTML = '<p class="error">همه ورودی‌ها باید عدد مثبت باشند.</p>';
+        return;
+      }
+
+      const s = (a + b + c + d) / 2;
+      const base = (s - a) * (s - b) * (s - c) * (s - d);
+      const product = a * b * c * d;
+
+      if (base < 0 || product <= 0) {
+        result.innerHTML = '<p class="error">این چهار ضلع نمی‌توانند یک چهارضلعی معتبر بسازند.</p>';
+        return;
+      }
+
+      const cosSquared = (base - area * area) / product;
+      const epsilon = 1e-10;
+
+      if (cosSquared < -epsilon || cosSquared > 1 + epsilon) {
+        result.innerHTML = '<p class="error">این مساحت با این چهار ضلع سازگار نیست.</p>';
+        return;
+      }
+
+      const clamped = Math.min(1, Math.max(0, cosSquared));
+      const x = Math.acos(Math.sqrt(clamped));
+      const sumOpp1 = 2 * deg(x);
+      const sumOpp2 = 360 - sumOpp1;
+
+      const paired1 = 360 - sumOpp1;
+      const paired2 = 360 - sumOpp2;
+
+      result.innerHTML = `
+        <h2>نتیجه</h2>
+        <p>بر اساس فرمول برتشنایدر، جمع دو زاویهٔ مقابل برابر یکی از دو حالت زیر است:</p>
+        <ul>
+          <li>A + C = <strong>${sumOpp1.toFixed(2)}°</strong> و در نتیجه B + D = <strong>${paired1.toFixed(2)}°</strong></li>
+          <li>A + C = <strong>${sumOpp2.toFixed(2)}°</strong> و در نتیجه B + D = <strong>${paired2.toFixed(2)}°</strong></li>
+        </ul>
+        <p class="note">تعیین جداگانهٔ A ،B ،C ،D فقط با این اطلاعات ممکن نیست و به دادهٔ بیشتری مثل قطرها یا یک زاویهٔ معلوم نیاز دارد.</p>
+      `;
+    });
+  </script>
 </body>
 </html>
